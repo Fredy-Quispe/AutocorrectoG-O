@@ -23,7 +23,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
+  padding: 10px;
   background-color: white;
   width: 100%;
   position: fixed;
