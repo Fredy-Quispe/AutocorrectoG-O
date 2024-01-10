@@ -13,6 +13,8 @@
     "@fortawesome/free-solid-svg-icons": "^6.5.1",
     "@fortawesome/vue-fontawesome": "^3.0.5",
     "core-js": "^3.8.3",
+    "gapi": "^0.0.3",
+    "gapi-client": "^0.0.3",
     "vue": "^3.2.13"
   },
   "devDependencies": {

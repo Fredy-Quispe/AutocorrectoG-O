@@ -3,10 +3,11 @@
         <div class="section-title">
             <span>Analize en segundos la gramatica y ortografia de su documento PDF.</span>
         </div>
-        <button class="main-button">Seleccionar documento PDF</button>
+        <button @click="openFileInput" class="main-button">Seleccionar documento PDF</button>
+        <input ref="fileInput" type="file" @change="handleFileSelect" style="display: none" accept="application/pdf" />
         <div class="alternative-buttons">
             <div class="circular-buttons">
-                <button class="alternative-button circular" title="Seleccionar un archivo de Google Drive"><font-awesome-icon :icon="['fab', 'google-drive']" /></button>
+                <button class="alternative-button circular" @click="openGoogleDrivePicker" title="Seleccionar un archivo de Google Drive"><font-awesome-icon :icon="['fab', 'google-drive']" /></button>
                 <button class="alternative-button circular" title="Seleccione el archivo de Dropbox"><font-awesome-icon :icon="['fab', 'dropbox']" /></button>
                 <button class="alternative-button circular" title="Cargar el archivo desde la URL"><font-awesome-icon :icon="['fas', 'link']" /></button>
             </div>
@@ -32,8 +33,66 @@
 </template>
 
 <script>
+import gapi from 'gapi-client';
+const google = window.google;
+
 export default {
-    name: 'FileUpload',
+    methods: {
+        async mounted() {
+            await new Promise((resolve) => {
+                if (window.gapi && window.gapi.load) {
+                    resolve();
+                } else {
+                    window.__gapiPromiseResolve = resolve;
+                }
+            });
+
+            gapi.load('client:auth2', () => {
+                this.initGoogleDriveClient();
+                this.openGoogleDrivePicker();
+            });
+            },
+
+            openFileInput() {
+                this.$refs.fileInput.click();
+            },
+
+            handleFileSelect(event) {
+                const selectedFile = event.target.files[0];
+                if (selectedFile) {
+                    console.log('Archivo seleccionado:', selectedFile);
+                    this.$emit('file-selected', selectedFile);
+                }
+            },
+
+            initGoogleDriveClient() {
+                gapi.client.init({
+                    apiKey: 'AIzaSyBB4mhQRIuMpY-fZhTIA9bJMdIAL81Ctl4',
+                    clientId: '196805263513-k6a8gp4h6sg3tfs4p93v9htjb5gti9ge.apps.googleusercontent.com',
+                    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+                    scope: 'https://www.googleapis.com/auth/drive.file',
+                }).then(() => {});
+            },
+
+            openGoogleDrivePicker() {
+                if (gapi.auth2) {
+                    gapi.auth2.getAuthInstance().signIn().then(() => {
+                    const picker = new google.picker.PickerBuilder()
+                        .addView(new google.picker.DocsView())
+                        .setOAuthToken(gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().access_token)
+                        .setCallback(this.handleGoogleDrivePicker)
+                        .build();
+                    picker.setVisible(true);
+                    });
+                } else {
+                    console.error('gapi.auth2 no está definido');
+                }
+            },
+
+            handleGoogleDrivePicker() {
+                // Maneja la lógica después de que el usuario selecciona un archivo en Google Drive
+            },
+    },
 };
 </script>
 
