@@ -1,19 +1,34 @@
 <template>
   <div id="app">
     <AppHeader />
-    <FileDownload />
+    <component :is="currentComponent" @fileSelected="showFileDownload" @goBack="showFileUpload" />
   </div>
 </template>
 
 <script>
 import AppHeader from '@/components/AppHeader.vue';
+import FileUpload from '@/components/FileUpload.vue';
 import FileDownload from '@/components/FileDownload.vue';
 
 export default {
   name: 'App',
   components: {
     AppHeader,
+    FileUpload,
     FileDownload,
+  },
+  data() {
+    return {
+      currentComponent: 'FileUpload',
+    };
+  },
+  methods: {
+    showFileDownload() {
+      this.currentComponent = 'FileDownload';
+    },
+    showFileUpload() {
+      this.currentComponent = 'FileUpload';
+    },
   },
 };
 </script>

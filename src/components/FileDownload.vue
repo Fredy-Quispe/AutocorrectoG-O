@@ -16,15 +16,33 @@
         </div>
 
         <footer class="footer">
-            <button class="return-button"> <font-awesome-icon :icon="['fas', 'left-long']" class="return-ico"/> Volver a empezar</button>
+            <button class="return-button" @click="goBack"> <font-awesome-icon :icon="['fas', 'left-long']" class="return-ico"/> Volver a empezar</button>
         </footer>
     </section>
 </template>
   
 <script>
 export default {
-    name: 'FileDownload',
+  name: 'FileDownload',
+  methods: {
+    goBack() {
+      this.$emit('goBack');
+    },
+  },
 };
+
+// Aqui COMIENZA los script's para poder guardar los documentos con el boton de Google Drive
+
+    //Pon aqui tu contenido 
+
+// Aqui TERMINA los script's para poder guardar los documentos con el boton de Google Drive
+
+// Aqui COMIENZA los script's para poder guardar los documentos con el boton de Dropbox
+
+    //Pon aqui tu contenido 
+
+// Aqui TERMINA los script's para poder guardar los documentos con el boton de Dropbox
+
 </script>
   
 <style scoped>
