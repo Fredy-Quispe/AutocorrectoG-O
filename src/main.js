@@ -1,3 +1,4 @@
+
 import { createApp } from 'vue'
 import App from './App.vue'
 
@@ -11,5 +12,3 @@ library.add(faGoogleDrive, faDropbox, faLink, faFilePdf, fa1, fa2, fa3, faLeftLo
 createApp(App)
 .component('font-awesome-icon', FontAwesomeIcon)
 .mount('#app')
-
-
