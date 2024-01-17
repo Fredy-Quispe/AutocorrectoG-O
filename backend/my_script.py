@@ -1,7 +1,9 @@
-import fitz  # PyMuPDF
+import fitz #PyMuPDF
 import Lenguaje
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from flask import jsonify
+
 
 def get_error_type(rule_id):
     if rule_id.startswith('MORFOLOGIK_RULE_ES'):
@@ -13,38 +15,35 @@ def get_error_type(rule_id):
     else:
         return 'Desconocido'
 
-def highlight_errors(text, matches):
-    lines = text.split('\n')
+def analizar_documento_pdf(archivo, output_filename='output.pdf'):
+    tool = Lenguaje.LanguageToolPublicAPI('es')
 
-    for i, line in enumerate(lines):
-        error_info = []
+    try:
+        pdf_document = fitz.open(archivo)
+        text = ""
 
-        for match in matches:
-            start, end = match.offset, match.offset + match.errorLength
-            if start <= len(line) and end <= len(line):
-                error_type = get_error_type(match.ruleId)
-                error_info.append((start, end, error_type, match.message))
+        for page_num in range(pdf_document.page_count):
+            page = pdf_document[page_num]
+            text += page.get_text()
 
-        error_info.sort()
+        matches = tool.check(text)
 
-        corrected_line = []
-        last_end = 0
+        # Guardar el texto con errores resaltados en un PDF
+        output_pdf_filename = output_filename
+        highlight_errors_pdf(text, matches, pdf_filename=output_pdf_filename)
 
-        for start, end, error_type, message in error_info:
-            if error_type == 'Ortografía':
-                corrected_line.extend(line[last_end:start])
-                corrected_line.append(f"\033[94m{line[start:end]}\033[0m")  # Azul para errores ortográficos
-                last_end = end
-            elif error_type == 'Error gramatical':
-                corrected_line.extend(line[last_end:start])
-                corrected_line.append(f"\033[92m{line[start:end]}\033[0m")  # Verde para errores gramaticales
-                last_end = end
+        pdf_document.close()
 
-            # Imprimir información adicional sobre el error
-            print(f"{line[start:end]} - {error_type} ({message})")
+        return jsonify({'message': 'Análisis ortográfico completado', 'result_filename': output_pdf_filename})
 
-        corrected_line.extend(line[last_end:])
-        print(''.join(corrected_line))
+    except fitz.FileNotFoundError as e:
+        # Manejar la excepción si el archivo no se encuentra
+        return jsonify({'error': f'Archivo no encontrado: {str(e)}'}), 404
+
+    except Exception as e:
+        # Manejar otras excepciones
+        return jsonify({'error': f'Error interno del servidor: {str(e)}'}), 500
+        
 
 def highlight_errors_pdf(text, matches, pdf_filename='output.pdf'):
     pdf = canvas.Canvas(pdf_filename, pagesize=letter)
@@ -83,28 +82,3 @@ def highlight_errors_pdf(text, matches, pdf_filename='output.pdf'):
         pdf.drawString(margin, y - 15, '\n')  # Mover a la siguiente línea
 
     pdf.save()
-
-# Tu código original
-tool = Lenguaje.LanguageToolPublicAPI('es')
-
-# Cambios para trabajar con archivos PDF
-input_filename = 'texto.pdf'  # Reemplaza 'tu_archivo.pdf' con el nombre de tu archivo
-
-try:
-    pdf_document = fitz.open(input_filename)
-    text = ""
-    for page_num in range(pdf_document.page_count):
-        page = pdf_document[page_num]
-        text += page.get_text()
-
-    matches = tool.check(text)
-
-    # Resaltar errores en el texto original y mostrar el texto corregido con colores diferentes
-    highlight_errors(text, matches)
-
-    # Guardar el texto con errores resaltados en un PDF
-    output_pdf_filename = 'output.pdf'  # Puedes cambiar 'output.pdf' al nombre que desees para el PDF
-    highlight_errors_pdf(text, matches, pdf_filename=output_pdf_filename)
-
-finally:
-    pdf_document.close()
