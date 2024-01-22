@@ -4,7 +4,7 @@
             <span>Analize en segundos la gramatica y ortografia de su documento PDF.</span>
         </div>
         <button class="main-button" @click="selectFile">Seleccionar documento PDF</button>
-        <input ref="fileInput" type="file" style="display: none" accept="application/pdf" />
+        <input ref="fileInput" type="file" style="display: none" accept="application/pdf" @change="handleFileChange" />
         <div class="alternative-buttons">
             <div class="circular-buttons">
                 <button class="alternative-button circular" title="Seleccionar un archivo de Google Drive"><font-awesome-icon :icon="['fab', 'google-drive']" /></button>
@@ -33,26 +33,33 @@
 </template>
 
 <script>
+import axios from 'axios'
 export default {
-  name: 'FileUpload',
+    name: 'FileUpload',
   methods: {
     selectFile() {
-      this.$emit('fileSelected');
+      // Abrir el cuadro de diálogo de selección de archivos
+      this.$refs.fileInput.click();
+    },
+
+    handleFileChange(event) {
+      const file = event.target.files[0];
+      const formData = new FormData();
+      formData.append('document', file);
+
+      axios.post('http://localhost:5000/api/analyze', formData)
+        .then(response => {
+          console.log(response.data.message);
+          // Emitir un evento para cambiar la vista
+          this.$emit('file-uploaded');
+        })
+        .catch(error => {
+          console.error('Error al enviar el archivo al servidor', error);
+          // Aquí puedes manejar errores de la solicitud
+        });
     },
   },
 };
-
-// Aqui COMIENZA los script's para poder subir documentos con el boton de Google Drive
-
-    //Pon aqui tu contenido 
-
-// Aqui TERMINA los script's para poder subir documentos con el boton de Google Drive
-
-// Aqui COMIENZA los script's para poder subir documentos con el boton de Dropbox
-
-    //Pon aqui tu contenido 
-
-// Aqui TERMINA los script's para poder subir documentos con el boton de Dropbox
 
 </script>
 

@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <AppHeader />
-    <component :is="currentComponent" @fileSelected="showFileDownload" @goBack="showFileUpload" />
+    <component :is="currentComponent" @file-selected="showFileDownload" @goBack="showFileUpload" />
   </div>
 </template>
 
@@ -24,7 +24,10 @@ export default {
   },
   methods: {
     showFileDownload() {
-      this.currentComponent = 'FileDownload';
+      // Cambiar la vista solo si la vista actual es 'FileUpload'
+      if (this.currentComponent === 'FileUpload') {
+        this.currentComponent = 'FileDownload';
+      }
     },
     showFileUpload() {
       this.currentComponent = 'FileUpload';

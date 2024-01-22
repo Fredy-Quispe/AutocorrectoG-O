@@ -22,26 +22,37 @@
 </template>
   
 <script>
+import axios from 'axios'
 export default {
   name: 'FileDownload',
   methods: {
     goBack() {
       this.$emit('goBack');
     },
+    downloadResult() {
+      // Hacer una solicitud para obtener el nombre del archivo resultante
+      // Esto asume que tienes acceso a un servicio que proporciona la ruta del archivo resultante
+      // Puedes usar axios u otra librería para hacer la solicitud
+      // Reemplaza la URL con la correcta según tu configuración del servidor Flask
+      axios
+        .post('http://tu_servidor/api/analyze', { document: 'ruta_de_tu_archivo.pdf' })
+        .then(response => {
+          const resultFilename = response.data.result_filename;
+
+          // Crear un enlace temporal y simular un clic para descargar el archivo
+          const link = document.createElement('a');
+          link.href = `http://tu_servidor/api/download/${resultFilename}`;
+          link.download = 'resultado.pdf';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        })
+        .catch(error => {
+          console.error('Error al descargar el resultado', error);
+        });
+    },
   },
 };
-
-// Aqui COMIENZA los script's para poder guardar los documentos con el boton de Google Drive
-
-    //Pon aqui tu contenido 
-
-// Aqui TERMINA los script's para poder guardar los documentos con el boton de Google Drive
-
-// Aqui COMIENZA los script's para poder guardar los documentos con el boton de Dropbox
-
-    //Pon aqui tu contenido 
-
-// Aqui TERMINA los script's para poder guardar los documentos con el boton de Dropbox
 
 </script>
   
