@@ -1,8 +1,8 @@
-import fitz #PyMuPDF
+import os
+import fitz 
 import Lenguaje
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-from flask import jsonify
 
 
 def get_error_type(rule_id):
@@ -19,7 +19,9 @@ def analizar_documento_pdf(archivo, output_filename='output.pdf'):
     tool = Lenguaje.LanguageToolPublicAPI('es')
 
     try:
-        pdf_document = fitz.open(archivo)
+        archivo.save(os.path.join('uploads', archivo.filename))
+
+        pdf_document = fitz.open(os.path.join('uploads', archivo.filename))
         text = ""
 
         for page_num in range(pdf_document.page_count):
@@ -28,28 +30,27 @@ def analizar_documento_pdf(archivo, output_filename='output.pdf'):
 
         matches = tool.check(text)
 
-        # Guardar el texto con errores resaltados en un PDF
-        output_pdf_filename = output_filename
-        highlight_errors_pdf(text, matches, pdf_filename=output_pdf_filename)
+        output_pdf_filepath = highlight_errors_pdf(text, matches, pdf_filename=output_filename)
 
         pdf_document.close()
 
-        return jsonify({'message': 'Análisis ortográfico completado', 'result_filename': output_pdf_filename})
+        return output_pdf_filepath
 
     except fitz.FileNotFoundError as e:
-        # Manejar la excepción si el archivo no se encuentra
-        return jsonify({'error': f'Archivo no encontrado: {str(e)}'}), 404
+        print(f'Error en el servidor: Archivo no encontrado: {str(e)}')
+        return {'error': f'Archivo no encontrado: {str(e)}'}, 404
 
     except Exception as e:
-        # Manejar otras excepciones
-        return jsonify({'error': f'Error interno del servidor: {str(e)}'}), 500
+        print(f'Error interno del servidor: {str(e)}')
+        return {'error': f'Error interno del servidor: {str(e)}'}, 500  
         
 
 def highlight_errors_pdf(text, matches, pdf_filename='output.pdf'):
-    pdf = canvas.Canvas(pdf_filename, pagesize=letter)
+
+    pdf_filepath = os.path.join('resultados', pdf_filename.replace('\\', '/'))
+    pdf = canvas.Canvas(pdf_filepath, pagesize=letter)
     pdf.setFont("Helvetica", 12)
 
-    # Ajustar el diseño para que quepa en tamaño A4
     page_width, page_height = letter
     margin = 50
     max_line_length = page_width - 2 * margin
@@ -67,18 +68,19 @@ def highlight_errors_pdf(text, matches, pdf_filename='output.pdf'):
         x, y = margin, page_height - (i + 1) * 15
         for j, char in enumerate(line):
             if j in error_indices:
-                pdf.setFillColorRGB(1, 0, 0)  # Rojo para errores
+                pdf.setFillColorRGB(1, 0, 0) 
             else:
-                pdf.setFillColorRGB(0, 0, 0)  # Negro para texto normal
+                pdf.setFillColorRGB(0, 0, 0) 
 
             pdf.drawString(x, y, char)
             x += pdf.stringWidth(char, "Helvetica", 12)
 
-            # Envolver texto a la siguiente línea si excede max_line_length
             if x > max_line_length:
                 x = margin
                 y -= 15
 
-        pdf.drawString(margin, y - 15, '\n')  # Mover a la siguiente línea
+        pdf.drawString(margin, y - 15, '\n') 
 
     pdf.save()
+    print(f'Ruta del archivo resultante: {pdf_filepath}')
+    return pdf_filepath

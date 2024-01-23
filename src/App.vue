@@ -1,7 +1,8 @@
 <template>
   <div id="app">
     <AppHeader />
-    <component :is="currentComponent" @file-selected="showFileDownload" @goBack="showFileUpload" />
+    <component :is="currentComponent" ref="dynamicComponent" @file-uploaded="showFileDownload"
+      @go-Back="showFileUpload" />
   </div>
 </template>
 
@@ -20,16 +21,27 @@ export default {
   data() {
     return {
       currentComponent: 'FileUpload',
+      resultFilename: '',
     };
   },
+  mounted() {
+    this.$watch('currentComponent', this.onComponentChange);
+  },
   methods: {
-    showFileDownload() {
-      // Cambiar la vista solo si la vista actual es 'FileUpload'
-      if (this.currentComponent === 'FileUpload') {
-        this.currentComponent = 'FileDownload';
-      }
+    onComponentChange() {
+      this.$nextTick(() => {
+        if (this.$refs.dynamicComponent && this.$refs.dynamicComponent.showFileDownload) {
+          this.$refs.dynamicComponent.showFileDownload(this.resultFilename);
+        }
+      });
+    },
+    showFileDownload(result) {
+      console.log('Contenido de resultFilename AVFT:', result);
+      this.resultFilename = result;
+      this.currentComponent = 'FileDownload';
     },
     showFileUpload() {
+      console.log('Cambiando a vista FileUpload');
       this.currentComponent = 'FileUpload';
     },
   },
@@ -43,7 +55,7 @@ export default {
 }
 
 body {
-  font-family: ibm plex sans,sans-serif;
+  font-family: ibm plex sans, sans-serif;
   background-color: #d9fadc;
   margin: 0;
 }

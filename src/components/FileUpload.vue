@@ -7,9 +7,13 @@
         <input ref="fileInput" type="file" style="display: none" accept="application/pdf" @change="handleFileChange" />
         <div class="alternative-buttons">
             <div class="circular-buttons">
-                <button class="alternative-button circular" title="Seleccionar un archivo de Google Drive"><font-awesome-icon :icon="['fab', 'google-drive']" /></button>
-                <button class="alternative-button circular" title="Seleccione el archivo de Dropbox"><font-awesome-icon :icon="['fab', 'dropbox']" /></button>
-                <button class="alternative-button circular" title="Cargar el archivo desde la URL"><font-awesome-icon :icon="['fas', 'link']" /></button>
+                <button class="alternative-button circular"
+                    title="Seleccionar un archivo de Google Drive"><font-awesome-icon
+                        :icon="['fab', 'google-drive']" /></button>
+                <button class="alternative-button circular" title="Seleccione el archivo de Dropbox"><font-awesome-icon
+                        :icon="['fab', 'dropbox']" /></button>
+                <button class="alternative-button circular" title="Cargar el archivo desde la URL"><font-awesome-icon
+                        :icon="['fas', 'link']" /></button>
             </div>
         </div>
         <div class="how-to-use">
@@ -25,7 +29,8 @@
                 </div>
                 <div class="step-card">
                     <font-awesome-icon :icon="['fas', '3']" class="card-number circular2" />
-                    <p>Se crea un documento PDF donde se resaltan los errores gramaticales y ortograficos y listo para descargar.</p>
+                    <p>Se crea un documento PDF donde se resaltan los errores gramaticales y ortograficos y listo para
+                        descargar.</p>
                 </div>
             </div>
         </div>
@@ -36,31 +41,66 @@
 import axios from 'axios'
 export default {
     name: 'FileUpload',
-  methods: {
-    selectFile() {
-      // Abrir el cuadro de diálogo de selección de archivos
-      this.$refs.fileInput.click();
+    data() {
+        return {
+            resultFilename: '',
+        };
     },
+    methods: {
+        selectFile() {
+            this.$refs.fileInput.click();
+        },
 
-    handleFileChange(event) {
-      const file = event.target.files[0];
-      const formData = new FormData();
-      formData.append('document', file);
+        handleFileSelected(result) {
+            console.log('Resultado recibido:', result);
 
-      axios.post('http://localhost:5000/api/analyze', formData)
-        .then(response => {
-          console.log(response.data.message);
-          // Emitir un evento para cambiar la vista
-          this.$emit('file-uploaded');
-        })
-        .catch(error => {
-          console.error('Error al enviar el archivo al servidor', error);
-          // Aquí puedes manejar errores de la solicitud
-        });
+            if (result.result_filename && typeof result.result_filename === 'string') {
+                this.resultFilename = result.result_filename;
+                console.log('Nombre del archivo resultante UVFT:', this.resultFilename);
+                this.$emit('file-uploaded', this.resultFilename);
+            } else {
+                console.error('Nombre del archivo resultante no es una cadena o está vacío.');
+            }
+        },
+
+        handleFileChange(event) {
+            console.log('Archivo seleccionado');
+            const file = event.target.files[0];
+
+            if (!file) {
+                console.error('No se seleccionó ningún archivo.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('document', file);
+
+            axios.post('http://localhost:5000/api/analyze', formData)
+                .then(response => {
+                    console.log('Respuesta desde el servidor:', response.data);
+
+                    if (response.data.error) {
+                        console.error('Error en la respuesta del servidor:', response.data.error);
+                    } else if (response.data.result_filename) {
+                        const resultFilename = response.data.result_filename;
+
+                        if (typeof resultFilename === 'string' && resultFilename.trim() !== '') {
+                            console.log('Valor de resultFilename:', resultFilename);
+                            this.handleFileSelected({ result_filename: resultFilename });
+                        } else {
+                            console.error('Nombre del archivo resultante no es una cadena o está vacío.');
+                        }
+                    } else {
+                        console.error('Propiedad result_filename no encontrada en la respuesta del servidor.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al enviar el archivo al servidor', error);
+                });
+        },
+
     },
-  },
 };
-
 </script>
 
 <style scoped>
@@ -154,8 +194,9 @@ export default {
     flex-direction: row;
     align-items: center;
     max-width: 450px;
-    font-family: ibm plex sans,sans-serif;
+    font-family: ibm plex sans, sans-serif;
 }
+
 .card-number {
     background-color: white;
     border: 1px solid rgb(151, 151, 151);
@@ -165,6 +206,7 @@ export default {
     font-weight: 700;
     margin-right: 20px;
 }
+
 .circular2 {
     border-radius: 50%;
     width: 15px;
