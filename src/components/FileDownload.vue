@@ -193,21 +193,32 @@ export default {
 }
 
 .return-button {
-    width: 190px;
-    background: transparent;
+    width: 220px;
+    height: 99%;
+    background: white;
     border: none;
-    margin-left: 20px;
+    margin-left: 0px;
     font-weight: 700;
     font-size: 16px;
     line-height: 19px;
     text-align: center;
     color: #313131;
     cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.return-button:hover {
+    background-color: #45a049; 
+    color: white;
 }
 
 .return-ico {
     margin-right: 20px;
     color: magenta;
+}
+
+.return-button:hover .return-ico {
+    color: white; 
 }
 </style>
   
