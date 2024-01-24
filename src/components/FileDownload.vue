@@ -3,9 +3,9 @@
 
         <div class="document-preview">
             <div class="document-preview">
-                <iframe :src="previewUrl" width="236" height="305" frameborder="0"></iframe>
+                <img :src="previewUrl" alt="Vista previa" width="236" height="305" />
                 <p class="filename">{{ resultFilename }}</p>
-            </div>  
+            </div>
         </div>
 
         <button class="download-button" @click="downloadResult">Descargar Documento</button>
@@ -35,6 +35,7 @@ export default {
     data() {
         return {
             resultFilename: '',
+            previewUrl: '',
         };
     },
     methods: {
@@ -43,9 +44,14 @@ export default {
             this.$emit('go-Back');
         },
         showFileDownload(result) {
-            console.log('Contenido de resultFilename DVFT:', result);
-            this.resultFilename = result;
-            this.currentComponent = 'FileDownload';
+
+            if (result && result.pdf_result_filepath && result.vista_previa_filepath) {
+                this.resultFilename = result.pdf_result_filepath;
+                this.previewUrl = `http://localhost:5000/api/preview/${encodeURI(result.vista_previa_filepath.replace(/\\/g, '/'))}`;
+                this.currentComponent = 'FileDownload';
+            } else {
+                console.error('Rutas de archivos no encontradas en la respuesta del servidor Download.');
+            }
         },
         downloadResult() {
             console.log('Nombre del archivo resultante DVFT:', this.resultFilename);
@@ -103,18 +109,18 @@ export default {
 }
 
 .document-preview iframe {
-  width: 100%;
-  height: 100%; /* Ajusta según tus necesidades */
+    width: 100%;
+    height: 100%;
 }
 
 .filename {
-  font-size: 16px;
-  color: #333;
-  margin-top: 5px;
-  text-align: center;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+    font-size: 16px;
+    color: #333;
+    margin-top: 5px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .download-button {

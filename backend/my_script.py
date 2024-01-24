@@ -1,9 +1,10 @@
 import os
 import fitz 
+import tempfile
 import Lenguaje
-from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-
+from pdf2image import convert_from_path
+from reportlab.lib.pagesizes import letter
 
 def get_error_type(rule_id):
     if rule_id.startswith('MORFOLOGIK_RULE_ES'):
@@ -31,10 +32,12 @@ def analizar_documento_pdf(archivo, output_filename='output.pdf'):
         matches = tool.check(text)
 
         output_pdf_filepath = highlight_errors_pdf(text, matches, pdf_filename=output_filename)
+        
+        vista_previa_filepath = vista_previa_pdf(output_pdf_filepath)
 
         pdf_document.close()
 
-        return output_pdf_filepath
+        return output_pdf_filepath, vista_previa_filepath
 
     except fitz.FileNotFoundError as e:
         print(f'Error en el servidor: Archivo no encontrado: {str(e)}')
@@ -42,8 +45,7 @@ def analizar_documento_pdf(archivo, output_filename='output.pdf'):
 
     except Exception as e:
         print(f'Error interno del servidor: {str(e)}')
-        return {'error': f'Error interno del servidor: {str(e)}'}, 500  
-        
+        return {'error': f'Error interno del servidor: {str(e)}'}, 500     
 
 def highlight_errors_pdf(text, matches, pdf_filename='output.pdf'):
 
@@ -84,3 +86,23 @@ def highlight_errors_pdf(text, matches, pdf_filename='output.pdf'):
     pdf.save()
     print(f'Ruta del archivo resultante: {pdf_filepath}')
     return pdf_filepath
+
+def vista_previa_pdf(pdf_filepath, output_folder='vistas_previas'):
+    try:
+        os.makedirs(output_folder, exist_ok=True)
+
+        output_pdf_filepath = pdf_filepath
+        
+        images = convert_from_path(output_pdf_filepath, first_page=1, last_page=1)
+
+        with tempfile.NamedTemporaryFile(dir=output_folder, delete=False, suffix=".png") as temp_image:
+            images[0].save(temp_image.name, format="PNG")
+            preview_image_filename = os.path.basename(temp_image.name)
+
+        vista_previa_filepath = os.path.join(output_folder, preview_image_filename)
+
+        return vista_previa_filepath
+    
+    except Exception as e:
+        print(f'Error al generar la vista previa después del análisis: {str(e)}')
+        return None

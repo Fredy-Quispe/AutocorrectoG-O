@@ -44,6 +44,7 @@ export default {
     data() {
         return {
             resultFilename: '',
+            previewUrl: '',
         };
     },
     methods: {
@@ -52,16 +53,31 @@ export default {
         },
 
         handleFileSelected(result) {
-            console.log('Resultado recibido:', result);
+            console.log('Resultado recibido FSelected:', result);
 
-            if (result.result_filename && typeof result.result_filename === 'string') {
-                this.resultFilename = result.result_filename;
-                console.log('Nombre del archivo resultante UVFT:', this.resultFilename);
-                this.$emit('file-uploaded', this.resultFilename);
+            if (result.pdf_result_filepath && result.vista_previa_filepath) {
+                const { pdf_result_filepath, vista_previa_filepath } = result;
+
+                console.log('Ruta del archivo PDF resultante FSelected:', pdf_result_filepath);
+                console.log('Ruta de la vista previa resultante FSelected:', vista_previa_filepath);
+
+                if (typeof pdf_result_filepath === 'string' && typeof vista_previa_filepath === 'string') {
+                    this.resultFilename = pdf_result_filepath;
+                    this.previewUrl = vista_previa_filepath;
+                    console.log('Nombre del archivo resultante FSelected:', this.resultFilename);
+                    console.log('URL de vista previa FSelected:', this.previewUrl);
+                    this.$emit('file-uploaded', {
+                        pdf_result_filepath: result.pdf_result_filepath,
+                        vista_previa_filepath: result.vista_previa_filepath
+                    });
+                } else {
+                    console.error('Las rutas de archivos no son cadenas válidas.');
+                }
             } else {
-                console.error('Nombre del archivo resultante no es una cadena o está vacío.');
+                console.error('Respuesta del servidor no tiene la estructura esperada.');
             }
         },
+
 
         handleFileChange(event) {
             console.log('Archivo seleccionado');
@@ -77,18 +93,25 @@ export default {
 
             axios.post('http://localhost:5000/api/analyze', formData)
                 .then(response => {
-                    console.log('Respuesta desde el servidor:', response.data);
+                    console.log('Respuesta desde el servidor FChange:', response.data);
 
                     if (response.data.error) {
                         console.error('Error en la respuesta del servidor:', response.data.error);
                     } else if (response.data.result_filename) {
-                        const resultFilename = response.data.result_filename;
+                        const resultFilenames = response.data.result_filename;
 
-                        if (typeof resultFilename === 'string' && resultFilename.trim() !== '') {
-                            console.log('Valor de resultFilename:', resultFilename);
-                            this.handleFileSelected({ result_filename: resultFilename });
+                        if (Array.isArray(resultFilenames) && resultFilenames.length === 2) {
+                            const [pdf_result_filepath, vista_previa_filepath] = resultFilenames;
+
+                            console.log('Ruta del archivo PDF resultante Fchange:', pdf_result_filepath);
+                            console.log('Ruta de la vista previa resultante Fchange:', vista_previa_filepath);
+
+                            this.handleFileSelected({
+                                pdf_result_filepath,
+                                vista_previa_filepath
+                            });
                         } else {
-                            console.error('Nombre del archivo resultante no es una cadena o está vacío.');
+                            console.error('La respuesta del servidor no tiene la estructura esperada.');
                         }
                     } else {
                         console.error('Propiedad result_filename no encontrada en la respuesta del servidor.');

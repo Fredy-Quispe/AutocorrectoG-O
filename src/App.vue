@@ -22,6 +22,7 @@ export default {
     return {
       currentComponent: 'FileUpload',
       resultFilename: '',
+      previewUrl: '',
     };
   },
   mounted() {
