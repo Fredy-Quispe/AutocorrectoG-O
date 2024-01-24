@@ -32,11 +32,23 @@ def analyze_document():
 def download_file(filename):
 
     filepath = join(filename.replace('/', os.sep))
+    print(f'Ruta completa del archivo: {filepath}')
 
     if os.path.exists(filepath):
         return send_from_directory('.', filename, as_attachment=True)
     else:
         return jsonify({'error': f'Archivo no encontrado: {filename}', 'ruta_completa': filepath}), 404
+    
+@app.route('/api/preview/<path:filename>', methods=['GET'])
+def get_preview_image(filename):
+        
+    filepath = join(filename.replace('/', os.sep))
+    print(f'Ruta completa del archivo: {filepath}')
+
+    if os.path.exists(filepath):
+        return send_from_directory('.', filename)
+    else:
+        return jsonify({'error': f'Imagen previa no encontrada: {filename}', 'ruta_completa': filepath}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)

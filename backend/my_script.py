@@ -33,7 +33,7 @@ def analizar_documento_pdf(archivo, output_filename='output.pdf'):
 
         output_pdf_filepath = highlight_errors_pdf(text, matches, pdf_filename=output_filename)
         
-        vista_previa_filepath = vista_previa_pdf(output_pdf_filepath, matches)
+        vista_previa_filepath = vista_previa_pdf(output_pdf_filepath)
 
         pdf_document.close()
 
@@ -87,12 +87,12 @@ def highlight_errors_pdf(text, matches, pdf_filename='output.pdf'):
     print(f'Ruta del archivo resultante: {pdf_filepath}')
     return pdf_filepath
 
-def vista_previa_pdf(pdf_filepath, matches, output_folder='vistas_previas'):
+def vista_previa_pdf(pdf_filepath, output_folder='vistas_previas'):
     try:
         os.makedirs(output_folder, exist_ok=True)
 
-        output_pdf_filepath = highlight_errors_pdf(pdf_filepath, matches, pdf_filename='output.pdf')
-
+        output_pdf_filepath = pdf_filepath
+        
         images = convert_from_path(output_pdf_filepath, first_page=1, last_page=1)
 
         with tempfile.NamedTemporaryFile(dir=output_folder, delete=False, suffix=".png") as temp_image:
