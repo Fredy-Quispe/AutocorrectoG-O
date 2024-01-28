@@ -3,7 +3,7 @@
 
         <div class="document-preview">
             <div class="document-preview">
-                <img :src="previewUrl" alt="Vista previa" width="236" height="305" />
+                <img :src="previewUrl" alt="Vista previa" class="img-document-preview"/>
                 <p class="filename">{{ resultFilename }}</p>
             </div>
         </div>
@@ -106,6 +106,11 @@ export default {
     align-items: center;
     justify-content: center;
     flex-direction: column;
+}
+
+.img-document-preview {
+    width: 200px;
+    height: 300px;
 }
 
 .document-preview iframe {
