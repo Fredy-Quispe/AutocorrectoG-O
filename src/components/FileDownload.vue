@@ -3,7 +3,7 @@
 
         <div class="document-preview">
             <div class="document-preview">
-                <img :src="previewUrl" alt="Vista previa" width="236" height="305" />
+                <img :src="previewUrl" alt="Vista previa" class="img-document-preview"/>
                 <p class="filename">{{ resultFilename }}</p>
             </div>
         </div>
@@ -108,6 +108,11 @@ export default {
     flex-direction: column;
 }
 
+.img-document-preview {
+    width: 200px;
+    height: 300px;
+}
+
 .document-preview iframe {
     width: 100%;
     height: 100%;
@@ -193,21 +198,32 @@ export default {
 }
 
 .return-button {
-    width: 190px;
-    background: transparent;
+    width: 220px;
+    height: 99%;
+    background: white;
     border: none;
-    margin-left: 20px;
+    margin-left: 0px;
     font-weight: 700;
     font-size: 16px;
     line-height: 19px;
     text-align: center;
     color: #313131;
     cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.return-button:hover {
+    background-color: #45a049; 
+    color: white;
 }
 
 .return-ico {
     margin-right: 20px;
     color: magenta;
+}
+
+.return-button:hover .return-ico {
+    color: white; 
 }
 </style>
   

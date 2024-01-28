@@ -5,39 +5,25 @@ import Lenguaje
 from reportlab.pdfgen import canvas
 from pdf2image import convert_from_path
 from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+
 
 def get_error_type(rule_id):
     if rule_id.startswith('MORFOLOGIK_RULE_ES'):
         return 'Ortografía'
-    elif rule_id == 'AGREEMENT_DET_NOUN':
-        return 'Error gramatical'
     elif rule_id == 'ES_SIMPLE_REPLACE_SIMPLE_TAMBIEN':
         return 'Error gramatical'
     else:
         return 'Desconocido'
 
-def analizar_documento_pdf(archivo, output_filename='output.pdf'):
-    tool = Lenguaje.LanguageToolPublicAPI('es')
-
+def analizar_documento_pdf(archivo, output_folder='resultados', preview_folder='vistas_previas'):
     try:
         archivo.save(os.path.join('uploads', archivo.filename))
 
-        pdf_document = fitz.open(os.path.join('uploads', archivo.filename))
-        text = ""
+        pdf_filepath, vista_previa_filepath = process_document_from_server(os.path.join('uploads', archivo.filename), output_folder, preview_folder)
 
-        for page_num in range(pdf_document.page_count):
-            page = pdf_document[page_num]
-            text += page.get_text()
-
-        matches = tool.check(text)
-
-        output_pdf_filepath = highlight_errors_pdf(text, matches, pdf_filename=output_filename)
-        
-        vista_previa_filepath = vista_previa_pdf(output_pdf_filepath)
-
-        pdf_document.close()
-
-        return output_pdf_filepath, vista_previa_filepath
+        return pdf_filepath, vista_previa_filepath
 
     except fitz.FileNotFoundError as e:
         print(f'Error en el servidor: Archivo no encontrado: {str(e)}')
@@ -45,63 +31,104 @@ def analizar_documento_pdf(archivo, output_filename='output.pdf'):
 
     except Exception as e:
         print(f'Error interno del servidor: {str(e)}')
-        return {'error': f'Error interno del servidor: {str(e)}'}, 500     
+        return {'error': f'Error interno del servidor: {str(e)}'}, 500
 
-def highlight_errors_pdf(text, matches, pdf_filename='output.pdf'):
+def process_document_from_server(input_pdf_filepath, output_pdf_folder='resultados', preview_folder='vistas_previas'):
+    try:
+        tool = Lenguaje.LanguageToolPublicAPI('es')
 
-    pdf_filepath = os.path.join('resultados', pdf_filename.replace('\\', '/'))
-    pdf = canvas.Canvas(pdf_filepath, pagesize=letter)
-    pdf.setFont("Helvetica", 12)
+        document_text = extract_text_from_pdf(input_pdf_filepath)
 
-    page_width, page_height = letter
-    margin = 50
-    max_line_length = page_width - 2 * margin
+        matches = tool.check(document_text)
 
-    lines = text.split('\n')
+        output_pdf_filepath = highlight_errors_pdf(document_text, matches, pdf_folder=output_pdf_folder)
 
-    for i, line in enumerate(lines):
-        error_indices = set()
+        preview_image_filepath = generate_preview_image(output_pdf_filepath, preview_folder)
+
+        return output_pdf_filepath, preview_image_filepath
+
+    except Exception as e:
+        print(f'Error al procesar el documento: {str(e)}')
+        return None, None
+
+
+def extract_text_from_pdf(pdf_filepath):
+    pdf_document = fitz.open(pdf_filepath)
+    text = ""
+    for page_num in range(pdf_document.page_count):
+        page = pdf_document[page_num]
+        text += page.get_text()
+    pdf_document.close()
+    return text    
+
+def highlight_errors_pdf(text, matches, pdf_folder='resultados', pdf_filename='output.pdf'):
+    try:
+        os.makedirs(pdf_folder, exist_ok=True)
+
+        pdf_filepath = os.path.join(pdf_folder, pdf_filename.replace('\\', '/'))
+        doc = SimpleDocTemplate(pdf_filepath, pagesize=letter)
+        elements = []
+
+        texto_formateado = ''
+
+        i = 0
+        while i < len(text):
+            palabra_actual = ''
+            tipo_error = None
+            mensaje = None
+
+            for match in matches:
+                start, end = match.offset, match.offset + match.errorLength
+                if start <= i < end:
+                    palabra_actual = text[start:end]
+                    tipo_error = get_error_type(match.ruleId)
+                    mensaje = match.message
+
+            if tipo_error == 'Ortografía':
+                texto_formateado += f'<font color="blue">{palabra_actual}</font>'
+            elif tipo_error == 'Error gramatical':
+                texto_formateado += f'<font color="green">{palabra_actual}</font>'
+            else:
+                texto_formateado += text[i]
+
+            i += len(palabra_actual) or 1
+
+        elements.append(Paragraph(texto_formateado, style=getSampleStyleSheet()["BodyText"]))
 
         for match in matches:
-            start, end = match.offset, match.offset + match.errorLength
-            if start <= len(line) and end <= len(line):
-                error_indices.update(range(start, end))
+            tipo_error = get_error_type(match.ruleId)
+            palabra_incorrecta = text[match.offset:match.offset + match.errorLength]
 
-        x, y = margin, page_height - (i + 1) * 15
-        for j, char in enumerate(line):
-            if j in error_indices:
-                pdf.setFillColorRGB(1, 0, 0) 
-            else:
-                pdf.setFillColorRGB(0, 0, 0) 
+            elements.append(Paragraph(f'\nPalabra Incorrecta: <font color="red">{palabra_incorrecta}</font>', style=getSampleStyleSheet()["BodyText"]))
+            elements.append(Paragraph(f'Tipo de Error: <font color="purple">{tipo_error}</font>', style=getSampleStyleSheet()["BodyText"]))
+            elements.append(Paragraph(f'Mensaje: <font color="brown">{match.message}</font>', style=getSampleStyleSheet()["BodyText"]))
+            elements.append(Paragraph(f'Reemplazos sugeridos: {match.replacements}', style=getSampleStyleSheet()["BodyText"]))
+            elements.append(Paragraph(f'Posición del error: {match.offset}-{match.offset + match.errorLength}', style=getSampleStyleSheet()["BodyText"]))
+            elements.append(Spacer(1, 12))
 
-            pdf.drawString(x, y, char)
-            x += pdf.stringWidth(char, "Helvetica", 12)
+        doc.build(elements)
 
-            if x > max_line_length:
-                x = margin
-                y -= 15
+        print(f'Ruta del archivo resultante: {pdf_filepath}')
+        return pdf_filepath
 
-        pdf.drawString(margin, y - 15, '\n') 
+    except Exception as e:
+        print(f'Error al resaltar errores en el PDF: {str(e)}')
+        return None
 
-    pdf.save()
-    print(f'Ruta del archivo resultante: {pdf_filepath}')
-    return pdf_filepath
 
-def vista_previa_pdf(pdf_filepath, output_folder='vistas_previas'):
+def generate_preview_image(pdf_filepath, output_folder='vistas_previas'):
     try:
         os.makedirs(output_folder, exist_ok=True)
 
-        output_pdf_filepath = pdf_filepath
-        
-        images = convert_from_path(output_pdf_filepath, first_page=1, last_page=1)
+        images = convert_from_path(pdf_filepath, first_page=1, last_page=1)
 
         with tempfile.NamedTemporaryFile(dir=output_folder, delete=False, suffix=".png") as temp_image:
             images[0].save(temp_image.name, format="PNG")
             preview_image_filename = os.path.basename(temp_image.name)
 
-        vista_previa_filepath = os.path.join(output_folder, preview_image_filename)
+        preview_image_filepath = os.path.join(output_folder, preview_image_filename)
 
-        return vista_previa_filepath
+        return preview_image_filepath
     
     except Exception as e:
         print(f'Error al generar la vista previa después del análisis: {str(e)}')
