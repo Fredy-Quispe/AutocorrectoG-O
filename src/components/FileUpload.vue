@@ -1,5 +1,11 @@
 <template>
     <section class="main-content">
+        <div v-if="errorMessage" class="modal-error">
+            <div class="modal-content-error">
+                <p>{{ errorMessage }}</p>
+                <button @click="clearError">Cerrar</button>
+            </div>
+        </div>
         <div class="section-title">
             <span>Analize en segundos la gramatica y ortografia de su documento PDF.</span>
         </div>
@@ -57,6 +63,7 @@ export default {
             previewUrl: '',
             isOpen: false,
             pdfUrl: '',
+            errorMessage: '',
         };
     },
     methods: {
@@ -98,6 +105,14 @@ export default {
             }
         },
 
+        showErrorNotification(message) {
+            this.errorMessage = message;
+        },
+
+        clearError() {
+            this.errorMessage = '';
+        },
+
         handleFileChange(event) {
             console.log('Archivo seleccionado');
             const file = event.target.files[0];
@@ -116,6 +131,7 @@ export default {
 
                     if (response.data.error) {
                         console.error('Error en la respuesta del servidor:', response.data.error);
+                        this.showErrorNotification('Hubo un error al procesar el documento. Por favor, inténtalo de nuevo.');
                     } else if (response.data.result_filename) {
                         const resultFilenames = response.data.result_filename;
 
@@ -125,10 +141,14 @@ export default {
                             console.log('Ruta del archivo PDF resultante Fchange:', pdf_result_filepath);
                             console.log('Ruta de la vista previa resultante Fchange:', vista_previa_filepath);
 
-                            this.handleFileSelected({
-                                pdf_result_filepath,
-                                vista_previa_filepath
-                            });
+                            if (pdf_result_filepath == null && vista_previa_filepath == null) {
+                                this.showErrorNotification('Hubo un error al procesar el documento. Por favor, inténtalo de nuevo.');
+                            } else {
+                                this.handleFileSelected({
+                                    pdf_result_filepath,
+                                    vista_previa_filepath
+                                });
+                            }
                         } else {
                             console.error('La respuesta del servidor no tiene la estructura esperada.');
                         }
@@ -138,6 +158,7 @@ export default {
                 })
                 .catch(error => {
                     console.error('Error al enviar el archivo al servidor', error);
+                    this.showErrorNotification('Hubo un error al enviar el archivo al servidor. Por favor, inténtalo de nuevo.');
                 });
         },
 
@@ -145,7 +166,6 @@ export default {
             axios.post('http://localhost:5000/api/analyze/url', { pdfUrl: this.pdfUrl })
                 .then(response => {
                     console.log('Respuesta desde el servidor:', response.data);
-                    // this.$emit('file-uploaded', response.data);
                 })
                 .catch(error => {
                     console.error('Error al subir desde URL:', error);
@@ -273,6 +293,7 @@ export default {
     border-radius: 4px;
     cursor: pointer;
 }
+
 .button-modal:hover {
     background-color: #45a049;
 }
@@ -339,4 +360,42 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-}</style>
+}
+
+.modal-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.modal-content-error {
+    background-color: #ffcccc;
+    color: black;
+    padding: 20px;
+    border: 1px solid #990000;
+    max-width: 400px; 
+    text-align: center;
+    border-radius: 8px;
+}
+
+.modal-error button {
+    background-color: #990000;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.modal-error button:hover {
+    background-color: #770000;
+}
+</style>
