@@ -5,7 +5,10 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "start": "npm-run-all --parallel start-frontend start-backend",
+    "start-frontend": "npm run serve",
+    "start-backend": "cd backend && python app.py"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.5.1",
@@ -19,6 +22,7 @@
     "gapi": "^0.0.3",
     "gapi-client": "^0.0.3",
     "mitt": "^3.0.1",
+    "npm-run-all": "^4.1.5",
     "vue": "^3.4.15"
   },
   "devDependencies": {
