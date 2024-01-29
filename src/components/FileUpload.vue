@@ -11,27 +11,6 @@
         </div>
         <button class="main-button" @click="selectFile">Seleccionar documento PDF</button>
         <input ref="fileInput" type="file" style="display: none" accept="application/pdf" @change="handleFileChange" />
-        <div class="alternative-buttons">
-            <div class="circular-buttons">
-                <button class="alternative-button circular"
-                    title="Seleccionar un archivo de Google Drive"><font-awesome-icon
-                        :icon="['fab', 'google-drive']" /></button>
-                <button class="alternative-button circular" title="Seleccione el archivo de Dropbox"><font-awesome-icon
-                        :icon="['fab', 'dropbox']" /></button>
-                <button class="alternative-button circular" title="Cargar el archivo desde la URL"
-                    @click="toggleModal"><font-awesome-icon :icon="['fas', 'link']" /></button>
-                <!-- Modal-->
-                <div v-show="isOpen" class="url-upload-modal">
-                    <div class="modal-content">
-                        <span class="close" @click="closeModal">&times;</span>
-                        <label for="pdfUrl" class="title-modal">Ingrese la URL del PDF</label>
-                        <input v-model="pdfUrl" class="input-modal" id="pdfUrl"
-                            placeholder="https://example.com/documento.pdf" />
-                        <button @click="uploadFromUrl" class="button-modal">Enviar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="how-to-use">
             <h2>Cómo analizar un documento PDF</h2>
             <div class="step-cards">
@@ -61,8 +40,6 @@ export default {
         return {
             resultFilename: '',
             previewUrl: '',
-            isOpen: false,
-            pdfUrl: '',
             errorMessage: '',
         };
     },
@@ -162,19 +139,6 @@ export default {
                 });
         },
 
-        uploadFromUrl() {
-            axios.post('http://localhost:5000/api/analyze/url', { pdfUrl: this.pdfUrl })
-                .then(response => {
-                    console.log('Respuesta desde el servidor:', response.data);
-                })
-                .catch(error => {
-                    console.error('Error al subir desde URL:', error);
-                })
-                .finally(() => {
-                    this.closeModal();
-                });
-        },
-
     },
 };
 </script>
@@ -199,118 +163,14 @@ export default {
     border: none;
     border-radius: 50px;
     cursor: pointer;
-    margin-top: 50px;
+    margin-top: 60px;
+    margin-bottom: 60px;
     height: 73px;
     width: 600px;
 }
 
 .main-button:hover {
     background-color: #45a049;
-}
-
-.alternative-buttons {
-    margin-top: 30px;
-    text-align: center;
-}
-
-.alternative-button {
-    background-color: white;
-    border: 1px solid rgb(151, 151, 151);
-    outline: 2px solid transparent;
-    color: black;
-    padding: 10px 20px;
-    font-size: 20px;
-    cursor: pointer;
-    margin-right: 16px;
-}
-
-.alternative-button:hover {
-    border-color: #45a049;
-}
-
-.url-upload-modal {
-    display: inline-block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-content {
-    background-color: #fefefe;
-    padding: 20px;
-    border: 1px solid #888;
-    max-width: 500px;
-    width: 100%;
-    height: 150px;
-    text-align: center;
-    position: relative;
-    border-radius: 8px;
-}
-
-.close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    position: absolute;
-    top: 10px;
-    right: 20px;
-}
-
-.close:hover,
-.close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.title-modal {
-    display: block;
-    margin-top: 20px;
-    margin-bottom: 15px;
-}
-
-.input-modal {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    box-sizing: border-box;
-    border-radius: 4px;
-    border: solid 1px;
-}
-
-.button-modal {
-    background-color: #45a049;
-    color: white;
-    padding: 15px 90px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.button-modal:hover {
-    background-color: #45a049;
-}
-
-.circular-buttons {
-    display: flex;
-    justify-content: center;
-}
-
-.circular {
-    border-radius: 50%;
-    width: 45px;
-    height: 45px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 14px;
 }
 
 .how-to-use {
@@ -380,7 +240,7 @@ export default {
     color: black;
     padding: 20px;
     border: 1px solid #990000;
-    max-width: 400px; 
+    max-width: 400px;
     text-align: center;
     border-radius: 8px;
 }

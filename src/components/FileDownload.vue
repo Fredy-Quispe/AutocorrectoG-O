@@ -3,7 +3,7 @@
 
         <div class="document-preview">
             <div class="document-preview">
-                <img :src="previewUrl" alt="Vista previa" class="img-document-preview"/>
+                <img :src="previewUrl" alt="Vista previa" class="img-document-preview" />
                 <p class="filename">{{ resultFilename }}</p>
             </div>
         </div>
@@ -12,10 +12,6 @@
 
         <div class="options">
             <div class="circular-buttons">
-                <button class="option-button circular" title="Guardar en Google Drive"><font-awesome-icon
-                        :icon="['fab', 'google-drive']" /></button>
-                <button class="option-button circular" title="Guardar en Dropbox"><font-awesome-icon
-                        :icon="['fab', 'dropbox']" /></button>
                 <button class="option-button circular" @click="goBack" title="Eliminar"><font-awesome-icon
                         :icon="['fas', 'trash']" /></button>
             </div>
@@ -213,7 +209,7 @@ export default {
 }
 
 .return-button:hover {
-    background-color: #45a049; 
+    background-color: #45a049;
     color: white;
 }
 
@@ -223,7 +219,7 @@ export default {
 }
 
 .return-button:hover .return-ico {
-    color: white; 
+    color: white;
 }
 </style>
   

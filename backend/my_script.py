@@ -2,9 +2,9 @@ import os
 import fitz 
 import tempfile
 import Lenguaje
-from reportlab.pdfgen import canvas
 from pdf2image import convert_from_path
 from reportlab.lib.pagesizes import letter
+from werkzeug.datastructures import FileStorage
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 
@@ -18,10 +18,16 @@ def get_error_type(rule_id):
         return 'Desconocido'
 
 def analizar_documento_pdf(archivo, output_folder='resultados', preview_folder='vistas_previas'):
-    try:
-        archivo.save(os.path.join('uploads', archivo.filename))
+    try:        
+        if isinstance(archivo, FileStorage):
+            archivo_temp_path = os.path.join('uploads', archivo.filename)
+            archivo.save(archivo_temp_path)
+        elif isinstance(archivo, str):
+            archivo_temp_path = archivo
+        else:
+            raise ValueError('Tipo de archivo no admitido')
 
-        pdf_filepath, vista_previa_filepath = process_document_from_server(os.path.join('uploads', archivo.filename), output_folder, preview_folder)
+        pdf_filepath, vista_previa_filepath = process_document_from_server(archivo_temp_path, output_folder, preview_folder)
 
         return pdf_filepath, vista_previa_filepath
 
