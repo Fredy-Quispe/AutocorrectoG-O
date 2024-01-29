@@ -50,11 +50,16 @@ def process_document_from_server(input_pdf_filepath, output_pdf_folder='resultad
         output_pdf_filepath = highlight_errors_pdf(document_text, matches, pdf_folder=output_pdf_folder)
 
         preview_image_filepath = generate_preview_image(output_pdf_filepath, preview_folder)
+        
+        os.remove(input_pdf_filepath)
 
         return output_pdf_filepath, preview_image_filepath
 
     except Exception as e:
         print(f'Error al procesar el documento: {str(e)}')
+
+        os.remove(input_pdf_filepath)
+        
         return None, None
 
 
