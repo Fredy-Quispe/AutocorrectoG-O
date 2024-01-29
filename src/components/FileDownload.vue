@@ -12,13 +12,13 @@
 
         <div class="options">
             <div class="circular-buttons">
-                <button class="option-button circular" @click="goBack" title="Eliminar"><font-awesome-icon
+                <button class="option-button circular" @click="goBack(); deleteFile()" title="Eliminar"><font-awesome-icon
                         :icon="['fas', 'trash']" /></button>
             </div>
         </div>
 
         <footer class="footer">
-            <button class="return-button" @click="goBack"> <font-awesome-icon :icon="['fas', 'left-long']"
+            <button class="return-button" @click="goBack(); deleteFile()"> <font-awesome-icon :icon="['fas', 'left-long']"
                     class="return-ico" /> Volver a empezar</button>
         </footer>
     </section>
@@ -80,6 +80,54 @@ export default {
                 document.body.removeChild(link);
             }).catch(error => {
                 console.error('Error al descargar el archivo', error);
+            });
+        },
+
+        deleteFile() {
+            if (!this.resultFilename) {
+                console.error('El nombre del archivo resultante no está definido DVFT.');
+                return;
+            }
+
+            const relativePreviewUrl = this.previewUrl.replace('http://localhost:5000/api/preview/', '');
+            const encodedPreviewUrl = encodeURI(relativePreviewUrl.replace(/\\/g, '/'));
+            const deleteUrl = `http://localhost:5000/api/delete/${encodedPreviewUrl}`;
+
+            console.log('Contenido de relativePreviewUrl en FDFD ', relativePreviewUrl);
+            console.log('Contenido de encodedPreviewUrl en FDFD', encodedPreviewUrl);
+            console.log('Contenido de deleteUrl en FDFD', deleteUrl);
+
+            axios({
+                url: deleteUrl,
+                method: 'DELETE',
+            }).then(response => {
+                console.log('Respuesta al eliminar resultante:', response.data.message);
+                this.deleteFileResult();
+            }).catch(error => {
+                console.error('Error al eliminar el archivo', error);
+            });
+        },
+
+        deleteFileResult() {
+            if (!this.resultFilename) {
+                console.error('La URL de la vista previa no está definida.');
+                return;
+            }
+
+            const encodedFilename = encodeURI(this.resultFilename.replace(/\\/g, '/'));
+            const deleteFileUrl = `http://localhost:5000/api/delete/${encodedFilename}`;
+
+            console.log('Contenido de encodedFilename en FDFD2 ', encodedFilename);
+            console.log('Contenido de deleteFileUrl en FDFD2 ', deleteFileUrl);
+
+
+            axios({
+                url: deleteFileUrl,
+                method: 'DELETE',
+            }).then(response => {
+                console.log('Respuesta al eliminar el documento resultante:', response.data.message);
+            }).catch(error => {
+                console.error('Error al eliminar el documento resultante', error);
             });
         },
     },

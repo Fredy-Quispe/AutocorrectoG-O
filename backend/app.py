@@ -1,12 +1,35 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-from os.path import join
+from os.path import join, exists
+from shutil import rmtree
 
 import os
 from my_script import analizar_documento_pdf
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, methods=["DELETE"])
+
+@app.route('/api/delete/<path:filename>', methods=['DELETE'])
+def delete_file(filename):
+    filepath = join(filename.replace('/', os.sep))
+    print(f'Ruta completa del archivo a eliminar: {filepath}')
+
+    print(f'Contenido de filename: {filename}')
+
+    if exists(filepath):
+
+        try:
+            os.remove(filepath)
+
+            vista_previa_filepath = join('vistas_previas', f'{filename}.png')
+            if exists(vista_previa_filepath):
+                os.remove(vista_previa_filepath)
+
+            return jsonify({'message': 'Archivo eliminado correctamente'})
+        except Exception as e:
+            return jsonify({'error': f'Error al eliminar el archivo: {str(e)}'}), 500
+    else:
+        return jsonify({'error': f'Archivo no encontrado: {filename}'}), 404
 
 @app.route('/api/analyze', methods=['POST'])
 def analyze_document():
